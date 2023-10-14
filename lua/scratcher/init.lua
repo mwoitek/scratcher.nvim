@@ -49,34 +49,21 @@ function M.setup(opts)
   _opts = builder:build()
 end
 
-local function split_cmd(opts)
-  local cmd
-  local h_split = opts.position == "bottom" or opts.position == "top"
-
-  if h_split then
-    local height = opts.height and opts.height or _opts.height
-    cmd = opts.position == "bottom" and "belowright" or "aboveleft"
-    cmd = string.format("%s %d split", cmd, height)
-  else
-    local width = opts.width and opts.width or _opts.width
-    cmd = opts.position == "right" and "belowright" or "aboveleft"
-    cmd = string.format("%s %d vsplit", cmd, width)
-  end
-
-  vim.cmd(cmd)
-end
-
 function M._new_scratch(position)
+  local validation = require "scratcher.validation"
+  local splits = require "scratcher.splits"
+
   local opts
-  if require("scratcher.validation").is_valid_position(position) then
+  if validation.is_valid_position(position) then
     opts = { position = position }
     setmetatable(opts, { __index = _opts })
   else
     opts = _opts
   end
 
+  vim.cmd(splits.split_cmd(opts))
+
   -- TODO: Improve
-  split_cmd(opts)
   local win = vim.api.nvim_get_current_win()
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_win_set_buf(win, buf)

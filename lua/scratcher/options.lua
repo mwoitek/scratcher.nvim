@@ -1,7 +1,7 @@
 local Options = {
   position = "bottom",
-  width = 36,
-  height = 12,
+  width = 0.35,
+  height = 0.2,
 }
 local VALID_OPTIONS = vim.tbl_keys(Options)
 
