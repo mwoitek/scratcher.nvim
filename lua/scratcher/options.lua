@@ -3,7 +3,7 @@ local Options = {
   width = 36,
   height = 12,
 }
-Options.keys = vim.tbl_keys(Options)
+local VALID_OPTIONS = vim.tbl_keys(Options)
 
 function Options:new()
   local opts = {}
@@ -55,6 +55,6 @@ function OptionsBuilder:set_height(height)
 end
 
 return {
-  Options = Options,
+  VALID_OPTIONS = VALID_OPTIONS,
   OptionsBuilder = OptionsBuilder,
 }
