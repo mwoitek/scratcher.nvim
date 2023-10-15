@@ -2,6 +2,7 @@ local Options = {
   position = "bottom",
   width = 0.35,
   height = 0.2,
+  start_in_insert = false,
 }
 local VALID_OPTIONS = vim.tbl_keys(Options)
 
@@ -50,6 +51,15 @@ function OptionsBuilder:set_height(height)
     self.opts.height = height
   else
     error("Invalid height was passed", 0)
+  end
+  return self
+end
+
+function OptionsBuilder:set_start_in_insert(start_in_insert)
+  if type(start_in_insert) == "boolean" then
+    self.opts.start_in_insert = start_in_insert
+  else
+    error("Invalid start_in_insert was passed", 0)
   end
   return self
 end

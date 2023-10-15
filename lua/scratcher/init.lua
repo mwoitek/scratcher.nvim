@@ -2,6 +2,10 @@ local M = {}
 
 local _opts
 
+-- FIXME: find solution that doesn't use globals
+local _win
+local _buf
+
 function M.setup(opts)
   local options = require "scratcher.options"
   local builder = options.OptionsBuilder:new()
@@ -50,6 +54,17 @@ function M.setup(opts)
 end
 
 function M._new_scratch(position)
+  -- FIXME: this solution is crap
+  _win = (_win and vim.api.nvim_win_is_valid(_win)) and _win or nil
+  _buf = (_buf and vim.api.nvim_buf_is_loaded(_buf)) and _buf or nil
+
+  if _win and _buf then
+    vim.api.nvim_set_current_win(_win)
+    vim.api.nvim_win_set_buf(_win, _buf)
+    if _opts.start_in_insert then vim.cmd "startinsert!" end
+    return
+  end
+
   local validation = require "scratcher.validation"
   local splits = require "scratcher.splits"
 
@@ -63,10 +78,10 @@ function M._new_scratch(position)
 
   vim.cmd(splits.split_cmd(opts))
 
-  -- TODO: Improve
-  local win = vim.api.nvim_get_current_win()
-  local buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(win, buf)
+  _win = vim.api.nvim_get_current_win()
+  _buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(_win, _buf)
+  if _opts.start_in_insert then vim.cmd "startinsert!" end
 end
 
 return M

@@ -1,5 +1,3 @@
-local M = {}
-
 local function compute_dimension(opts, dim)
   if dim ~= "width" and dim ~= "height" then error("invalid dimension", 2) end
 
@@ -10,17 +8,19 @@ local function compute_dimension(opts, dim)
   return math.floor(val * max_val)
 end
 
+local M = {}
+
 function M.split_cmd(opts)
   local cmd
   if opts.position == "bottom" or opts.position == "top" then
     cmd = string.format(
-      "%s %d split",
+      "%s %d split +",
       opts.position == "bottom" and "belowright" or "aboveleft",
       compute_dimension(opts, "height")
     )
   else
     cmd = string.format(
-      "%s %d vsplit",
+      "%s %d vsplit +",
       opts.position == "right" and "belowright" or "aboveleft",
       compute_dimension(opts, "width")
     )
