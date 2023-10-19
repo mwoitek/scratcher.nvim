@@ -1,24 +1,20 @@
-local M = {}
+local scratcher = {}
 
-local _opts
+function scratcher.setup(opts)
+  scratcher._buf = require("scratcher.buffer").ScratchBuffer:new()
 
--- FIXME: find solution that doesn't use globals
-local _win
-local _buf
-
-function M.setup(opts)
   local options = require "scratcher.options"
   local builder = options.OptionsBuilder:new()
 
   local valid_arg = not opts or require("scratcher.validation").is_dictionary(opts)
   if not valid_arg then
     vim.notify("[scratcher] Bad argument to setup(). Using defaults.", vim.log.levels.WARN)
-    _opts = builder:build()
+    scratcher._opts = builder:build()
     return
   end
 
   if not opts or vim.tbl_isempty(opts) then
-    _opts = builder:build()
+    scratcher._opts = builder:build()
     return
   end
 
@@ -32,7 +28,7 @@ function M.setup(opts)
       "[scratcher] Options were passed to setup(), but all of them are unknown. Using defaults.",
       vim.log.levels.WARN
     )
-    _opts = builder:build()
+    scratcher._opts = builder:build()
     return
   end
   if #keys > #valid_keys then
@@ -50,38 +46,24 @@ function M.setup(opts)
       vim.notify("[scratcher] " .. res .. ". Using default.", vim.log.levels.WARN)
     end
   end
-  _opts = builder:build()
+  scratcher._opts = builder:build()
 end
 
-function M._new_scratch(position)
-  -- FIXME: this solution is crap
-  _win = (_win and vim.api.nvim_win_is_valid(_win)) and _win or nil
-  _buf = (_buf and vim.api.nvim_buf_is_loaded(_buf)) and _buf or nil
+-- TODO: Improve
+function scratcher._new_scratch(position)
+  if not scratcher._opts then return end
 
-  if _win and _buf then
-    vim.api.nvim_set_current_win(_win)
-    vim.api.nvim_win_set_buf(_win, _buf)
-    if _opts.start_in_insert then vim.cmd "startinsert!" end
-    return
-  end
-
-  local validation = require "scratcher.validation"
-  local splits = require "scratcher.splits"
+  if scratcher._buf:switch(scratcher._opts) then return end
 
   local opts
-  if validation.is_valid_position(position) then
+  if require("scratcher.validation").is_valid_position(position) then
     opts = { position = position }
-    setmetatable(opts, { __index = _opts })
+    setmetatable(opts, { __index = scratcher._opts })
   else
-    opts = _opts
+    opts = scratcher._opts
   end
 
-  vim.cmd(splits.split_cmd(opts))
-
-  _win = vim.api.nvim_get_current_win()
-  _buf = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(_win, _buf)
-  if _opts.start_in_insert then vim.cmd "startinsert!" end
+  scratcher._buf:open(opts)
 end
 
-return M
+return scratcher
