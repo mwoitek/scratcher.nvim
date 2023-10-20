@@ -1,5 +1,5 @@
 local Options = {
-  position = "bottom",
+  position = "top",
   width = 0.35,
   height = 0.2,
   start_in_insert = false,

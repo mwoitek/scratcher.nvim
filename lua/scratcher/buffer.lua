@@ -65,31 +65,21 @@ local function split_cmd(opts)
 end
 
 function ScratchBuffer:open(opts)
-  if self.win then return false end
-
-  vim.cmd(split_cmd(opts))
-  self.win = vim.api.nvim_get_current_win()
-  self:_create_win_autocmd()
+  if self.win then
+    vim.api.nvim_set_current_win(self.win)
+  else
+    vim.cmd(split_cmd(opts))
+    self.win = vim.api.nvim_get_current_win()
+    self:_create_win_autocmd()
+  end
 
   if not self.buf then
     self.buf = vim.api.nvim_create_buf(false, true)
     self:_create_buf_autocmd()
   end
-
   vim.api.nvim_win_set_buf(self.win, self.buf)
-  if opts.start_in_insert then vim.cmd "startinsert!" end
 
-  return true
-end
-
-function ScratchBuffer:switch(opts)
-  if not self.win then return false end
-
-  vim.api.nvim_set_current_win(self.win)
-  vim.api.nvim_win_set_buf(self.win, self.buf)
-  if opts.start_in_insert then vim.cmd "startinsert!" end
-
-  return true
+  if opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
 end
 
 return {

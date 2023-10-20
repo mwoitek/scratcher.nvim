@@ -49,21 +49,9 @@ function scratcher.setup(opts)
   scratcher._opts = builder:build()
 end
 
--- TODO: Improve
-function scratcher._new_scratch(position)
+function scratcher.scratch()
   if not scratcher._opts then return end
-
-  if scratcher._buf:switch(scratcher._opts) then return end
-
-  local opts
-  if require("scratcher.validation").is_valid_position(position) then
-    opts = { position = position }
-    setmetatable(opts, { __index = scratcher._opts })
-  else
-    opts = scratcher._opts
-  end
-
-  scratcher._buf:open(opts)
+  scratcher._buf:open(scratcher._opts)
 end
 
 return scratcher
