@@ -3,6 +3,10 @@ local Options = {
   width = 0.35,
   height = 0.2,
   start_in_insert = false,
+  auto_hide = {
+    enable = false,
+    timeout = 5, -- minutes
+  },
 }
 local VALID_OPTIONS = vim.tbl_keys(Options)
 
@@ -60,6 +64,17 @@ function OptionsBuilder:set_start_in_insert(start_in_insert)
     self.opts.start_in_insert = start_in_insert
   else
     error("Invalid start_in_insert was passed", 0)
+  end
+  return self
+end
+
+function OptionsBuilder:set_auto_hide(auto_hide)
+  local valid_auto_hide = require("scratcher.validation").is_valid_auto_hide(auto_hide)
+  if valid_auto_hide then
+    setmetatable(auto_hide, { __index = Options.auto_hide })
+    self.opts.auto_hide = auto_hide
+  else
+    error("Invalid auto_hide was passed", 0)
   end
   return self
 end

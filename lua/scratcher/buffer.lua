@@ -6,20 +6,44 @@ function ScratchBuffer:new()
   return obj
 end
 
-function ScratchBuffer:_create_win_autocmd()
+function ScratchBuffer:_create_win_autocmds(opts)
   if not self.win then return end
-  vim.api.nvim_create_autocmd("WinClosed", {
-    group = vim.api.nvim_create_augroup("ScratcherAutocmds", { clear = false }),
-    once = true,
-    pattern = tostring(self.win),
-    callback = function()
-      self.win = nil
-      return true
-    end,
-  })
+
+  if not opts.auto_hide.enable then
+    vim.api.nvim_create_autocmd("WinEnter", {
+      group = vim.api.nvim_create_augroup("ScratcherAutocmds", { clear = false }),
+      callback = function()
+        if not vim.api.nvim_win_is_valid(self.win) then
+          self.win = nil
+          return true
+        end
+      end,
+    })
+    return
+  end
+
+  if opts.auto_hide.timeout == 0 then
+    vim.api.nvim_create_autocmd("WinEnter", {
+      group = vim.api.nvim_create_augroup("ScratcherAutocmds", { clear = false }),
+      callback = function()
+        if not vim.api.nvim_win_is_valid(self.win) then
+          self.win = nil
+          return true
+        end
+        if self.win ~= vim.api.nvim_get_current_win() then
+          vim.api.nvim_win_close(self.win, true)
+          self.win = nil
+          return true
+        end
+      end,
+    })
+    return
+  end
+
+  -- TODO: Implement case timeout > 0
 end
 
-function ScratchBuffer:_create_buf_autocmd()
+function ScratchBuffer:_create_buf_autocmds()
   if not self.buf then return end
   vim.api.nvim_create_autocmd("BufWipeout", {
     group = vim.api.nvim_create_augroup("ScratcherAutocmds", { clear = false }),
@@ -70,12 +94,12 @@ function ScratchBuffer:open(opts)
   else
     vim.cmd(split_cmd(opts))
     self.win = vim.api.nvim_get_current_win()
-    self:_create_win_autocmd()
+    self:_create_win_autocmds(opts)
   end
 
   if not self.buf then
     self.buf = vim.api.nvim_create_buf(false, true)
-    self:_create_buf_autocmd()
+    self:_create_buf_autocmds()
   end
   vim.api.nvim_win_set_buf(self.win, self.buf)
 

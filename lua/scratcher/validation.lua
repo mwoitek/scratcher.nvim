@@ -24,4 +24,13 @@ function M.is_valid_height(height)
   return height > 0 and height < (M.is_integer(height) and vim.o.lines or 1)
 end
 
+function M.is_valid_auto_hide(auto_hide)
+  if type(auto_hide) ~= "table" then return false end
+  if vim.tbl_isempty(auto_hide) then return true end
+  if #auto_hide > 2 then return false end
+  if not auto_hide.enable or type(auto_hide.enable) ~= "boolean" then return false end
+  if not auto_hide.timeout then return true end
+  return M.is_integer(auto_hide.timeout) and auto_hide.timeout >= 0
+end
+
 return M
