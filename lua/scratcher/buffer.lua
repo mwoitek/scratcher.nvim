@@ -23,7 +23,7 @@ function ScratchBuffer:_create_win_autocmds(opts)
       else
         if self._timer:is_active() then return end
         self._timer:start(
-          opts.auto_hide.timeout * 60000,
+          math.floor(opts.auto_hide.timeout * 60000),
           0,
           vim.schedule_wrap(function()
             self._timer:stop()

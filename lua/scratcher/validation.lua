@@ -30,7 +30,7 @@ function M.is_valid_auto_hide(auto_hide)
   if #auto_hide > 2 then return false end
   if not auto_hide.enable or type(auto_hide.enable) ~= "boolean" then return false end
   if not auto_hide.timeout then return true end
-  return M.is_integer(auto_hide.timeout) and auto_hide.timeout >= 0
+  return type(auto_hide.timeout) == "number" and auto_hide.timeout >= 0
 end
 
 return M
