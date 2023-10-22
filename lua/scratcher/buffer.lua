@@ -7,18 +7,18 @@ function ScratchBuffer:new()
 end
 
 function ScratchBuffer:_create_win_autocmds(opts)
-  if not self.win then return end
+  if not self._win then return end
 
   local callback
   if opts.auto_hide.enable then
     if not self._timer then self._timer = vim.loop.new_timer() end
     callback = function()
-      if not vim.api.nvim_win_is_valid(self.win) then
+      if not vim.api.nvim_win_is_valid(self._win) then
         self._timer:stop()
-        self.win = nil
+        self._win = nil
         vim.api.nvim_del_autocmd(self._autocmd_id)
         self._autocmd_id = nil
-      elseif self.win == vim.api.nvim_get_current_win() then
+      elseif self._win == vim.api.nvim_get_current_win() then
         self._timer:stop()
       else
         if self._timer:is_active() then return end
@@ -27,8 +27,8 @@ function ScratchBuffer:_create_win_autocmds(opts)
           0,
           vim.schedule_wrap(function()
             self._timer:stop()
-            vim.api.nvim_win_close(self.win, true)
-            self.win = nil
+            vim.api.nvim_win_close(self._win, true)
+            self._win = nil
             vim.api.nvim_del_autocmd(self._autocmd_id)
             self._autocmd_id = nil
           end)
@@ -37,8 +37,8 @@ function ScratchBuffer:_create_win_autocmds(opts)
     end
   else
     callback = function()
-      if not vim.api.nvim_win_is_valid(self.win) then
-        self.win = nil
+      if not vim.api.nvim_win_is_valid(self._win) then
+        self._win = nil
         vim.api.nvim_del_autocmd(self._autocmd_id)
         self._autocmd_id = nil
       end
@@ -52,13 +52,13 @@ function ScratchBuffer:_create_win_autocmds(opts)
 end
 
 function ScratchBuffer:_create_buf_autocmds()
-  if not self.buf then return end
+  if not self._buf then return end
   vim.api.nvim_create_autocmd("BufWipeout", {
     group = vim.api.nvim_create_augroup("ScratcherAutocmds", { clear = false }),
     once = true,
-    buffer = self.buf,
+    buffer = self._buf,
     callback = function()
-      self.buf = nil
+      self._buf = nil
       return true
     end,
   })
@@ -97,19 +97,19 @@ local function split_cmd(opts)
 end
 
 function ScratchBuffer:open(opts)
-  if self.win then
-    vim.api.nvim_set_current_win(self.win)
+  if self._win then
+    vim.api.nvim_set_current_win(self._win)
   else
     vim.cmd(split_cmd(opts))
-    self.win = vim.api.nvim_get_current_win()
+    self._win = vim.api.nvim_get_current_win()
     self:_create_win_autocmds(opts)
   end
 
-  if not self.buf then
-    self.buf = vim.api.nvim_create_buf(false, true)
+  if not self._buf then
+    self._buf = vim.api.nvim_create_buf(false, true)
     self:_create_buf_autocmds()
   end
-  vim.api.nvim_win_set_buf(self.win, self.buf)
+  vim.api.nvim_win_set_buf(self._win, self._buf)
 
   if opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
 end
