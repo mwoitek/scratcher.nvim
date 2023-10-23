@@ -19,9 +19,10 @@ function scratcher.setup(opts)
   end
 
   local keys = vim.tbl_keys(opts)
-  local valid_keys = vim.tbl_filter(function(key)
-    return vim.tbl_contains(options.VALID_OPTIONS, key)
-  end, keys)
+  local valid_keys = vim.tbl_filter(
+    function(key) return vim.tbl_contains(options.VALID_OPTIONS, key) end,
+    keys
+  )
 
   if vim.tbl_isempty(valid_keys) then
     vim.notify(

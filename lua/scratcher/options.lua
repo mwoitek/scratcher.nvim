@@ -25,9 +25,7 @@ function OptionsBuilder:new()
   return builder
 end
 
-function OptionsBuilder:build()
-  return self.opts
-end
+function OptionsBuilder:build() return self.opts end
 
 function OptionsBuilder:set_position(position)
   local valid_pos = require("scratcher.validation").is_valid_position(position)
