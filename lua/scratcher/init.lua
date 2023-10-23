@@ -49,9 +49,10 @@ function scratcher.setup(opts)
   scratcher._opts = builder:build()
 end
 
-function scratcher.scratch()
+function scratcher.scratch(clear)
   if not scratcher._opts then return end
   scratcher._buf:open(scratcher._opts)
+  if clear then scratcher._buf:clear() end
 end
 
 return scratcher

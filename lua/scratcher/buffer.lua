@@ -114,6 +114,11 @@ function ScratchBuffer:open(opts)
   if opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
 end
 
+function ScratchBuffer:clear()
+  if not self._buf or vim.api.nvim_buf_line_count(self._buf) == 0 then return end
+  vim.api.nvim_buf_set_lines(self._buf, 0, -1, true, {})
+end
+
 return {
   ScratchBuffer = ScratchBuffer,
 }
