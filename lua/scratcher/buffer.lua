@@ -7,10 +7,10 @@ function ScratchBuffer:new()
 end
 
 function ScratchBuffer:_create_win_autocmds(opts)
-  if not self._win then return end
+  if not self._win then error("cannot create autocmds, uninitialized window", 2) end
 
   vim.api.nvim_create_autocmd("WinClosed", {
-    group = vim.api.nvim_create_augroup("ScratcherWinAutocmds", { clear = false }),
+    group = vim.api.nvim_create_augroup("ScratcherWinAutocmds", {}),
     pattern = tostring(self._win),
     callback = function()
       self._win = nil
@@ -28,9 +28,7 @@ function ScratchBuffer:_create_win_autocmds(opts)
     callback = function()
       if self._win == vim.api.nvim_get_current_win() then
         self._timer:stop()
-      elseif self._timer:is_active() then
-        return
-      else
+      elseif not self._timer:is_active() then
         self._timer:start(
           math.floor(opts.auto_hide.timeout * 60000),
           0,
@@ -42,14 +40,14 @@ function ScratchBuffer:_create_win_autocmds(opts)
 end
 
 function ScratchBuffer:_create_buf_autocmds()
-  if not self._buf then return end
+  if not self._buf then error("cannot create autocmds, uninitialized buffer", 2) end
+
   vim.api.nvim_create_autocmd("BufWipeout", {
-    group = vim.api.nvim_create_augroup("ScratcherBufAutocmds", { clear = false }),
-    once = true,
+    group = vim.api.nvim_create_augroup("ScratcherBufAutocmds", {}),
     buffer = self._buf,
     callback = function()
       self._buf = nil
-      return true
+      vim.api.nvim_del_augroup_by_name "ScratcherBufAutocmds"
     end,
   })
 end
@@ -93,19 +91,33 @@ function ScratchBuffer:open(opts)
     vim.cmd(split_cmd(opts))
     self._win = vim.api.nvim_get_current_win()
     self:_create_win_autocmds(opts)
+    vim.wo[self._win].winfixwidth = true
+    vim.wo[self._win].winfixheight = true
   end
 
   if not self._buf then
     self._buf = vim.api.nvim_create_buf(false, true)
     self:_create_buf_autocmds()
+    vim.api.nvim_buf_set_name(self._buf, "Scratcher")
   end
-  vim.api.nvim_win_set_buf(self._win, self._buf)
 
+  vim.api.nvim_win_set_buf(self._win, self._buf)
   if opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
 end
 
+function ScratchBuffer:toggle(opts)
+  if self._win then
+    vim.api.nvim_win_close(self._win, true)
+  else
+    self:open(opts)
+  end
+end
+
 function ScratchBuffer:clear()
-  if not self._buf or vim.api.nvim_buf_line_count(self._buf) == 0 then return end
+  if not self._buf then error("failed to clear buffer, uninitialized buffer", 2) end
+  if vim.api.nvim_buf_line_count(self._buf) == 0 then
+    error("failed to clear buffer, cannot operate on buffer lines", 2)
+  end
   vim.api.nvim_buf_set_lines(self._buf, 0, -1, true, {})
 end
 

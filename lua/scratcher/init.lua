@@ -51,9 +51,26 @@ function scratcher.setup(opts)
 end
 
 function scratcher.scratch(clear)
-  if not scratcher._opts then return end
+  if not scratcher._opts then
+    vim.notify(
+      "[scratcher] Failed to execute function. Plugin was not configured properly.",
+      vim.log.levels.ERROR
+    )
+    return
+  end
   scratcher._buf:open(scratcher._opts)
   if clear then scratcher._buf:clear() end
+end
+
+function scratcher.scratch_toggle()
+  if not scratcher._opts then
+    vim.notify(
+      "[scratcher] Failed to execute function. Plugin was not configured properly.",
+      vim.log.levels.ERROR
+    )
+    return
+  end
+  scratcher._buf:toggle(scratcher._opts)
 end
 
 return scratcher
