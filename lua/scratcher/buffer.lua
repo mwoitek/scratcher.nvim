@@ -98,7 +98,7 @@ function ScratchBuffer:open(opts)
   if not self._buf then
     self._buf = vim.api.nvim_create_buf(false, true)
     self:_create_buf_autocmds()
-    vim.api.nvim_buf_set_name(self._buf, "Scratcher")
+    vim.api.nvim_buf_set_name(self._buf, "scratcher")
   end
 
   vim.api.nvim_win_set_buf(self._win, self._buf)
@@ -119,6 +119,25 @@ function ScratchBuffer:clear()
     error("failed to clear buffer, cannot operate on buffer lines", 2)
   end
   vim.api.nvim_buf_set_lines(self._buf, 0, -1, true, {})
+end
+
+function ScratchBuffer:create_paste_cmd(opts)
+  vim.api.nvim_create_user_command("ScratchPaste", function(tbl)
+    local curr_buf = vim.api.nvim_get_current_buf()
+    if curr_buf == self._buf then return end
+
+    local paste = require "scratcher.paste"
+    local text = paste.get_text(curr_buf, vim.api.nvim_get_mode().mode)
+
+    if not self._win then
+      local win = vim.api.nvim_get_current_win()
+      self:open(opts)
+      vim.api.nvim_set_current_win(win)
+    end
+
+    local count = tbl.count > 0 and tbl.count or 1
+    paste.paste(self._buf, text, count)
+  end, { count = 1 })
 end
 
 return {

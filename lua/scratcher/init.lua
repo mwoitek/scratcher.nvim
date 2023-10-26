@@ -48,6 +48,9 @@ function scratcher.setup(opts)
     end
   end
   scratcher._opts = builder:build()
+
+  -- FIXME: in general, this doesn't work
+  scratcher._buf:create_paste_cmd(scratcher._opts)
 end
 
 function scratcher.scratch(clear)
