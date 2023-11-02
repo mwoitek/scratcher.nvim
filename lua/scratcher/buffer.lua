@@ -6,6 +6,7 @@ function ScratchBuffer:new()
   return obj
 end
 
+-- TODO: remove opts as a parameter
 function ScratchBuffer:_create_win_autocmds(opts)
   if not self._win then error("cannot create autocmds, uninitialized window", 2) end
 
@@ -52,29 +53,36 @@ function ScratchBuffer:_create_buf_autocmds()
   })
 end
 
+-- TODO: turn into method
+---@param opts table
+---@param dim string
+---@return number
 local function compute_dimension(opts, dim)
   if dim ~= "width" and dim ~= "height" then error("invalid dimension", 2) end
 
   local val = opts[dim]
   if not val or type(val) ~= "number" then error("invalid dimension value", 2) end
 
-  if require("scratcher.validation").is_integer(val) then return val end
+  if require("scratcher.utils").is_integer(val) then return val end
 
   local max_val = dim == "width" and vim.o.columns or vim.o.lines
   return math.floor(val * max_val)
 end
 
+-- TODO: turn into method
+---@param opts table
+---@return string
 local function split_cmd(opts)
   local cmd
   if opts.position == "bottom" or opts.position == "top" then
     cmd = string.format(
-      "%s %d split +",
+      "%s %d split",
       opts.position == "bottom" and "belowright" or "aboveleft",
       compute_dimension(opts, "height")
     )
   elseif opts.position == "right" or opts.position == "left" then
     cmd = string.format(
-      "%s %d vsplit +",
+      "%s %d vsplit",
       opts.position == "right" and "belowright" or "aboveleft",
       compute_dimension(opts, "width")
     )
@@ -84,6 +92,7 @@ local function split_cmd(opts)
   return cmd
 end
 
+-- TODO: remove opts as a parameter
 function ScratchBuffer:open(opts)
   if self._win then
     vim.api.nvim_set_current_win(self._win)
@@ -102,9 +111,12 @@ function ScratchBuffer:open(opts)
   end
 
   vim.api.nvim_win_set_buf(self._win, self._buf)
+
+  -- TODO: move to separate method
   if opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
 end
 
+-- TODO: remove opts as a parameter
 function ScratchBuffer:toggle(opts)
   if self._win then
     vim.api.nvim_win_close(self._win, true)
@@ -121,13 +133,14 @@ function ScratchBuffer:clear()
   vim.api.nvim_buf_set_lines(self._buf, 0, -1, true, {})
 end
 
+-- TODO: remove opts as a parameter
 function ScratchBuffer:create_paste_cmd(opts)
   vim.api.nvim_create_user_command("ScratchPaste", function(tbl)
     local curr_buf = vim.api.nvim_get_current_buf()
     if curr_buf == self._buf then return end
 
     local paste = require "scratcher.paste"
-    local text = paste.get_text(curr_buf, vim.api.nvim_get_mode().mode)
+    local text = paste.get_text_from_selection(curr_buf, vim.api.nvim_get_mode().mode)
 
     if not self._win then
       local win = vim.api.nvim_get_current_win()
@@ -135,8 +148,7 @@ function ScratchBuffer:create_paste_cmd(opts)
       vim.api.nvim_set_current_win(win)
     end
 
-    local count = tbl.count > 0 and tbl.count or 1
-    paste.paste(self._buf, text, count)
+    paste.paste(self._buf, text, tbl.count)
   end, { count = 1 })
 end
 
