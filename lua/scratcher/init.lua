@@ -1,39 +1,34 @@
 local M = {}
 
+local ERROR = vim.log.levels.ERROR
+
+---@type Scratcher
+local scratcher
 local configured = false
 
 ---@param opts any
 function M.setup(opts)
-  local Scratcher = require "scratcher.scratcher"
-  M.scratcher = Scratcher:new(opts)
-  M.scratcher:create_paste_cmd()
-
+  M.raw_opts = opts
+  scratcher = require("scratcher.scratcher"):new(opts)
   configured = true
 end
 
 ---@param clear boolean?
 function M.scratch(clear)
   if not configured then
-    vim.notify(
-      "[scratcher] Failed to execute function. Plugin was not configured properly.",
-      vim.log.levels.ERROR
-    )
+    vim.notify("[scratcher] Failed to execute function. Plugin was not configured properly.", ERROR)
     return
   end
-
-  M.scratcher:open()
-  if clear then M.scratcher:clear() end
+  scratcher:open()
+  if clear then scratcher:clear() end
 end
 
 function M.scratch_toggle()
   if not configured then
-    vim.notify(
-      "[scratcher] Failed to execute function. Plugin was not configured properly.",
-      vim.log.levels.ERROR
-    )
+    vim.notify("[scratcher] Failed to execute function. Plugin was not configured properly.", ERROR)
     return
   end
-  M.scratcher:toggle()
+  scratcher:toggle()
 end
 
 return M

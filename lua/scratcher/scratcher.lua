@@ -1,8 +1,8 @@
-local Options = require "scratcher.options"
 local api = vim.api
 
+local Options = require "scratcher.options"
+
 ---@class Scratcher
----@field raw_opts any
 ---@field opts Options
 ---@field win number?
 ---@field buf number?
@@ -11,13 +11,13 @@ local Scratcher = {}
 ---@param raw_opts any
 ---@return Scratcher
 function Scratcher:new(raw_opts)
-  local scratch = {}
-  setmetatable(scratch, { __index = self })
+  local scratcher = {}
+  setmetatable(scratcher, { __index = self })
 
-  scratch.raw_opts = raw_opts
-  scratch.opts = Options:new(raw_opts)
+  scratcher.opts = Options:new(raw_opts)
+  scratcher:create_paste_cmd()
 
-  return scratch
+  return scratcher
 end
 
 function Scratcher:create_win_autocmds()
@@ -68,29 +68,51 @@ function Scratcher:create_buf_autocmds()
   })
 end
 
-function Scratcher:open()
+---@param stay boolean?
+function Scratcher:create_win(stay)
+  vim.validate { stay = { stay, "boolean", true } }
+
   if self.win then
-    api.nvim_set_current_win(self.win)
-  else
-    -- create window
+    if not stay then api.nvim_set_current_win(self.win) end
+    return
+  end
+
+  if stay then
+    local win = api.nvim_get_current_win()
+
     vim.cmd(self.opts:split_cmd())
     self.win = api.nvim_get_current_win()
-    self:create_win_autocmds()
-    vim.wo[self.win].winfixwidth = true
-    vim.wo[self.win].winfixheight = true
+
+    api.nvim_set_current_win(win)
+  else
+    vim.cmd(self.opts:split_cmd())
+    self.win = api.nvim_get_current_win()
   end
 
-  if not self.buf then
-    -- create buffer
-    self.buf = api.nvim_create_buf(false, true)
-    self:create_buf_autocmds()
-    api.nvim_buf_set_name(self.buf, "scratcher")
-  end
+  self:create_win_autocmds()
 
+  vim.wo[self.win].winfixwidth = true
+  vim.wo[self.win].winfixheight = true
+end
+
+function Scratcher:create_buf()
+  if self.buf then return end
+
+  self.buf = api.nvim_create_buf(false, true)
+  self:create_buf_autocmds()
+  api.nvim_buf_set_name(self.buf, "[scratcher]")
+end
+
+---@param stay boolean?
+function Scratcher:open(stay)
+  vim.validate { stay = { stay, "boolean", true } }
+
+  self:create_win(stay)
+  self:create_buf()
   api.nvim_win_set_buf(self.win, self.buf)
 
   -- TODO: move to separate method
-  if self.opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
+  if not stay and self.opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
 end
 
 function Scratcher:toggle()
@@ -116,13 +138,7 @@ function Scratcher:create_paste_cmd()
 
     local paste = require "scratcher.paste"
     local text = paste.get_text_from_selection(curr_buf, api.nvim_get_mode().mode)
-
-    if not self.win then
-      local win = api.nvim_get_current_win()
-      self:open()
-      api.nvim_set_current_win(win)
-    end
-
+    self:open(true)
     paste.paste(self.buf, text, tbl.count)
   end, { count = 1 })
 end
