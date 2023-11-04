@@ -4,7 +4,7 @@ local configured = false
 
 ---@param opts any
 function M.setup(opts)
-  local Scratcher = require "scratcher.buffer"
+  local Scratcher = require "scratcher.scratcher"
   M.scratcher = Scratcher:new(opts)
   M.scratcher:create_paste_cmd()
 
