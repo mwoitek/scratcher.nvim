@@ -1,3 +1,13 @@
+local valid = require "scratcher.validation"
+
+---@alias auto_hide { enable: boolean, timeout: number }
+
+---@class Options
+---@field position string
+---@field width number
+---@field height number
+---@field start_in_insert boolean
+---@field auto_hide auto_hide
 local Options = {
   position = "top",
   width = 0.35,
@@ -5,79 +15,67 @@ local Options = {
   start_in_insert = false,
   auto_hide = {
     enable = false,
-    timeout = 5, -- minutes
+    timeout = 10, -- minutes
   },
 }
-local VALID_OPTIONS = vim.tbl_keys(Options)
 
-function Options:new()
+---@param raw_opts any
+---@return Options
+function Options:new(raw_opts)
   local opts = {}
   setmetatable(opts, { __index = self })
+
+  if not valid.is_dict(raw_opts) then return opts end
+
+  for _, opt in ipairs { "position", "width", "height" } do
+    opts[opt] = valid["is_valid_" .. opt](raw_opts[opt]) and raw_opts[opt] or nil
+  end
+
+  if type(raw_opts.start_in_insert) == "boolean" then opts.start_in_insert = raw_opts.start_in_insert end
+
+  local raw_ah = raw_opts.auto_hide
+  if valid.is_dict(raw_ah) then
+    local ah = {}
+    setmetatable(ah, { __index = self.auto_hide })
+
+    if type(raw_ah.enable) == "boolean" then ah.enable = raw_ah.enable end
+    if valid.is_non_negative(raw_ah.timeout) then ah.timeout = raw_ah.timeout end
+
+    opts.auto_hide = not vim.tbl_isempty(ah) and ah or nil
+  end
+
   return opts
 end
 
-local OptionsBuilder = {}
+---@alias dimension "width" | "height"
 
-function OptionsBuilder:new()
-  local builder = {}
-  setmetatable(builder, { __index = self })
-  builder.opts = Options:new()
-  return builder
+---@param dim dimension
+---@return number
+function Options:get_dimension(dim)
+  vim.validate {
+    dim = {
+      dim,
+      function(d) return d == "width" or d == "height" end,
+      "width or height",
+    },
+  }
+
+  local val = self[dim]
+  ---@cast val number
+
+  if require("scratcher.utils").is_integer(val) then return val end
+
+  local max_val = dim == "width" and vim.o.columns or vim.o.lines
+  return math.floor(val * max_val)
 end
 
-function OptionsBuilder:build() return self.opts end
-
-function OptionsBuilder:set_position(position)
-  local valid_pos = require("scratcher.validation").is_valid_position(position)
-  if valid_pos then
-    self.opts.position = position
-  else
-    error("Invalid position was passed", 0)
+---@return string
+function Options:split_cmd()
+  local pos = self.position
+  if pos == "bottom" or pos == "top" then
+    return string.format("%s %d split", pos == "bottom" and "bel" or "abo", self:get_dimension "height")
   end
-  return self
+  return string.format("%s %d vsplit", pos == "right" and "bel" or "abo", self:get_dimension "width")
 end
 
-function OptionsBuilder:set_width(width)
-  local valid_width = require("scratcher.validation").is_valid_width(width)
-  if valid_width then
-    self.opts.width = width
-  else
-    error("Invalid width was passed", 0)
-  end
-  return self
-end
-
-function OptionsBuilder:set_height(height)
-  local valid_height = require("scratcher.validation").is_valid_height(height)
-  if valid_height then
-    self.opts.height = height
-  else
-    error("Invalid height was passed", 0)
-  end
-  return self
-end
-
-function OptionsBuilder:set_start_in_insert(start_in_insert)
-  if type(start_in_insert) == "boolean" then
-    self.opts.start_in_insert = start_in_insert
-  else
-    error("Invalid start_in_insert was passed", 0)
-  end
-  return self
-end
-
-function OptionsBuilder:set_auto_hide(auto_hide)
-  local valid_auto_hide = require("scratcher.validation").is_valid_auto_hide(auto_hide)
-  if valid_auto_hide then
-    setmetatable(auto_hide, { __index = Options.auto_hide })
-    self.opts.auto_hide = auto_hide
-  else
-    error("Invalid auto_hide was passed", 0)
-  end
-  return self
-end
-
-return {
-  VALID_OPTIONS = VALID_OPTIONS,
-  OptionsBuilder = OptionsBuilder,
-}
+return Options
