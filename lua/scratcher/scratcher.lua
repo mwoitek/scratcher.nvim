@@ -1,7 +1,5 @@
 local api = vim.api
 
-local Options = require "scratcher.options"
-
 ---@class Scratcher
 ---@field opts Options
 ---@field win number?
@@ -13,7 +11,7 @@ local Scratcher = {}
 function Scratcher:new(raw_opts)
   local scratcher = {}
   setmetatable(scratcher, { __index = self })
-  scratcher.opts = Options:new(raw_opts)
+  scratcher.opts = require("scratcher.options"):new(raw_opts)
   return scratcher
 end
 
