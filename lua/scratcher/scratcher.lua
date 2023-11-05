@@ -139,7 +139,8 @@ function Scratcher:toggle()
   end
 end
 
-function Scratcher:paste()
+---@param count number
+function Scratcher:paste(count)
   local curr_buf = api.nvim_get_current_buf()
   if curr_buf == self.buf then return end
 
@@ -148,7 +149,7 @@ function Scratcher:paste()
 
   local text = paste.get_text_from_selection(curr_buf, mode)
   self:open(true)
-  paste.paste(self.buf, text, vim.v.count)
+  paste.paste(self.buf, text, count)
 end
 
 return Scratcher

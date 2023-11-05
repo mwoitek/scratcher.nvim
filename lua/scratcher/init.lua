@@ -36,7 +36,7 @@ function M.scratch_paste()
     vim.notify("[scratcher] Failed to execute function. Plugin was not configured properly.", ERROR)
     return
   end
-  scratcher:paste()
+  scratcher:paste(vim.v.count)
 end
 
 return M
