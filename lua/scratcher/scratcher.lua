@@ -70,8 +70,6 @@ end
 
 ---@param stay boolean?
 function Scratcher:create_win(stay)
-  vim.validate { stay = { stay, "boolean", true } }
-
   if self.win then
     if not stay then api.nvim_set_current_win(self.win) end
     return
@@ -103,6 +101,28 @@ function Scratcher:create_buf()
   api.nvim_buf_set_name(self.buf, "[scratcher]")
 end
 
+function Scratcher:clear()
+  if not self.buf then error "failed to clear buffer, uninitialized buffer" end
+  if not api.nvim_buf_is_loaded(self.buf) then
+    error "failed to clear buffer, cannot operate on buffer lines"
+  end
+  api.nvim_buf_set_lines(self.buf, 0, -1, true, {})
+end
+
+function Scratcher:start_in_insert()
+  if not self.opts.start_in_insert then return end
+
+  if require("scratcher.utils").is_buf_empty(self.buf) then
+    self:clear()
+  else
+    api.nvim_buf_set_lines(self.buf, -1, -1, true, {})
+    local pos = { api.nvim_buf_line_count(self.buf), 0 }
+    api.nvim_win_set_cursor(self.win, pos)
+  end
+
+  vim.cmd.startinsert()
+end
+
 ---@param stay boolean?
 function Scratcher:open(stay)
   vim.validate { stay = { stay, "boolean", true } }
@@ -111,8 +131,7 @@ function Scratcher:open(stay)
   self:create_buf()
   api.nvim_win_set_buf(self.win, self.buf)
 
-  -- TODO: move to separate method
-  if not stay and self.opts.start_in_insert then vim.cmd [[execute 'normal! G' | startinsert!]] end
+  if not stay then self:start_in_insert() end
 end
 
 function Scratcher:toggle()
@@ -121,14 +140,6 @@ function Scratcher:toggle()
   else
     self:open()
   end
-end
-
-function Scratcher:clear()
-  if not self.buf then error "failed to clear buffer, uninitialized buffer" end
-  if not api.nvim_buf_is_loaded(self.buf) then
-    error "failed to clear buffer, cannot operate on buffer lines"
-  end
-  api.nvim_buf_set_lines(self.buf, 0, -1, true, {})
 end
 
 function Scratcher:create_paste_cmd()
