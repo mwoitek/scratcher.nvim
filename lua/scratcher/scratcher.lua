@@ -115,7 +115,7 @@ function Scratcher:start_in_insert()
   if require("scratcher.utils").is_buf_empty(self.buf) then
     self:clear()
   else
-    api.nvim_buf_set_lines(self.buf, -1, -1, true, {})
+    api.nvim_buf_set_lines(self.buf, -1, -1, true, { "" })
     local pos = { api.nvim_buf_line_count(self.buf), 0 }
     api.nvim_win_set_cursor(self.win, pos)
   end
