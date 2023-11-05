@@ -31,4 +31,12 @@ function M.scratch_toggle()
   scratcher:toggle()
 end
 
+function M.scratch_paste()
+  if not configured then
+    vim.notify("[scratcher] Failed to execute function. Plugin was not configured properly.", ERROR)
+    return
+  end
+  scratcher:paste()
+end
+
 return M

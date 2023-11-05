@@ -13,10 +13,7 @@ local Scratcher = {}
 function Scratcher:new(raw_opts)
   local scratcher = {}
   setmetatable(scratcher, { __index = self })
-
   scratcher.opts = Options:new(raw_opts)
-  scratcher:create_paste_cmd()
-
   return scratcher
 end
 
@@ -142,16 +139,16 @@ function Scratcher:toggle()
   end
 end
 
-function Scratcher:create_paste_cmd()
-  api.nvim_create_user_command("ScratchPaste", function(tbl)
-    local curr_buf = api.nvim_get_current_buf()
-    if curr_buf == self.buf then return end
+function Scratcher:paste()
+  local curr_buf = api.nvim_get_current_buf()
+  if curr_buf == self.buf then return end
 
-    local paste = require "scratcher.paste"
-    local text = paste.get_text_from_selection(curr_buf, api.nvim_get_mode().mode)
-    self:open(true)
-    paste.paste(self.buf, text, tbl.count)
-  end, { count = 1 })
+  local paste = require "scratcher.paste"
+  local mode = api.nvim_get_mode().mode
+
+  local text = paste.get_text_from_selection(curr_buf, mode)
+  self:open(true)
+  paste.paste(self.buf, text, vim.v.count)
 end
 
 return Scratcher
