@@ -69,8 +69,7 @@ function M.get_text_from_selection(mode, delete)
   end
 
   if delete and not vim.bo[0].readonly then
-    -- FIXME
-    for row = start_row, end_row - 1 do
+    for row = start_row, end_row do
       api.nvim_buf_set_text(0, row, start_col, row, end_col, {})
     end
   end
