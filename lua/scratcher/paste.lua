@@ -30,30 +30,50 @@ local M = {}
 function M.is_mode_allowed(mode) return vim.tbl_contains({ "n", "v", "V", CTRL_V }, mode) end
 
 ---@param motion_type string
+---@param delete boolean?
 ---@return string[]?
-function M.get_text_from_motion(motion_type)
+function M.get_text_from_motion(motion_type, delete)
   local range = get_range_from_motion(motion_type)
 
   if not range then return nil end
 
   if #range == 2 then
     local start_row, end_row = unpack(range)
-    return api.nvim_buf_get_lines(0, start_row, end_row, true)
+    local text = api.nvim_buf_get_lines(0, start_row, end_row, true)
+    if delete and not vim.bo[0].readonly then api.nvim_buf_set_lines(0, start_row, end_row, true, {}) end
+    return text
   end
 
   local start_row, start_col, end_row, end_col = unpack(range)
-  return api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
+  local text = api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
+  if delete and not vim.bo[0].readonly then
+    api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, {})
+  end
+  return text
 end
 
 ---@param mode string
+---@param delete boolean?
 ---@return string[]?
-function M.get_text_from_selection(mode)
+function M.get_text_from_selection(mode, delete)
   if mode:lower() ~= "v" and mode ~= CTRL_V then return nil end
 
   local start_row, start_col, end_row, end_col = unpack(get_range_from_selection())
   local text = api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
 
-  if mode:lower() == "v" then return text end
+  if mode:lower() == "v" then
+    if delete and not vim.bo[0].readonly then
+      api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, {})
+    end
+    return text
+  end
+
+  if delete and not vim.bo[0].readonly then
+    -- FIXME
+    for row = start_row, end_row - 1 do
+      api.nvim_buf_set_text(0, row, start_col, row, end_col, {})
+    end
+  end
   return vim.tbl_map(function(l) return l:sub(start_col + 1, end_col) end, text)
 end
 

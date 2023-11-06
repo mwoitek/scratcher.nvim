@@ -138,7 +138,8 @@ function Scratcher:toggle()
 end
 
 ---@param count number
-function Scratcher:paste(count)
+---@param delete boolean?
+function Scratcher:paste(count, delete)
   if self.buf == api.nvim_get_current_buf() then return end
 
   local p = require "scratcher.paste"
@@ -147,7 +148,7 @@ function Scratcher:paste(count)
   if not p.is_mode_allowed(mode) then return end
 
   if mode ~= "n" then
-    local text = p.get_text_from_selection(mode)
+    local text = p.get_text_from_selection(mode, delete)
     self:open(true)
     p.paste(self.buf, text, count)
     return
@@ -157,7 +158,7 @@ function Scratcher:paste(count)
 
   ---@param motion_type string
   _G.opfunc_paste = function(motion_type)
-    local text = p.get_text_from_motion(motion_type)
+    local text = p.get_text_from_motion(motion_type, delete)
     self:open(true)
     p.paste(self.buf, text, count)
 

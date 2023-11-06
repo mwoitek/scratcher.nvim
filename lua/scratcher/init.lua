@@ -35,8 +35,9 @@ function M.scratch_toggle()
   run_if_configured(function() scratcher:toggle() end)
 end
 
-function M.scratch_paste()
-  run_if_configured(function() scratcher:paste(vim.v.count) end)
+---@param delete boolean?
+function M.scratch_paste(delete)
+  run_if_configured(function() scratcher:paste(vim.v.count, delete) end)
 end
 
 return M
