@@ -139,15 +139,34 @@ end
 
 ---@param count number
 function Scratcher:paste(count)
-  local curr_buf = api.nvim_get_current_buf()
-  if curr_buf == self.buf then return end
+  if self.buf == api.nvim_get_current_buf() then return end
 
-  local paste = require "scratcher.paste"
+  local p = require "scratcher.paste"
+
   local mode = api.nvim_get_mode().mode
+  if not p.is_mode_allowed(mode) then return end
 
-  local text = paste.get_text_from_selection(curr_buf, mode)
-  self:open(true)
-  paste.paste(self.buf, text, count)
+  if mode ~= "n" then
+    local text = p.get_text_from_selection(mode)
+    self:open(true)
+    p.paste(self.buf, text, count)
+    return
+  end
+
+  local old_opfunc = vim.go.operatorfunc
+
+  ---@param motion_type string
+  _G.opfunc_paste = function(motion_type)
+    local text = p.get_text_from_motion(motion_type)
+    self:open(true)
+    p.paste(self.buf, text, count)
+
+    vim.go.operatorfunc = old_opfunc
+    _G.opfunc_paste = nil
+  end
+
+  vim.go.operatorfunc = "v:lua.opfunc_paste"
+  api.nvim_feedkeys("g@", "nt", false)
 end
 
 return Scratcher

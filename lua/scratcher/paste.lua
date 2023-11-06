@@ -3,6 +3,18 @@ local api = vim.api
 local CTRL_V = api.nvim_replace_termcodes("<C-V>", true, false, true)
 local ESC = api.nvim_replace_termcodes("<Esc>", true, false, true)
 
+---@param motion_type string
+---@return number[]?
+local function get_range_from_motion(motion_type)
+  if motion_type == "block" then return nil end
+
+  local start_row, start_col = unpack(api.nvim_buf_get_mark(0, "["))
+  local end_row, end_col = unpack(api.nvim_buf_get_mark(0, "]"))
+
+  if motion_type == "line" then return { start_row - 1, end_row } end
+  return { start_row - 1, start_col, end_row - 1, end_col + 1 }
+end
+
 ---@return number[]
 local function get_range_from_selection()
   api.nvim_feedkeys(ESC, "ntx", false)
@@ -13,14 +25,33 @@ end
 
 local M = {}
 
----@param buf number
+---@param mode string
+---@return boolean
+function M.is_mode_allowed(mode) return vim.tbl_contains({ "n", "v", "V", CTRL_V }, mode) end
+
+---@param motion_type string
+---@return string[]?
+function M.get_text_from_motion(motion_type)
+  local range = get_range_from_motion(motion_type)
+
+  if not range then return nil end
+
+  if #range == 2 then
+    local start_row, end_row = unpack(range)
+    return api.nvim_buf_get_lines(0, start_row, end_row, true)
+  end
+
+  local start_row, start_col, end_row, end_col = unpack(range)
+  return api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
+end
+
 ---@param mode string
 ---@return string[]?
-function M.get_text_from_selection(buf, mode)
+function M.get_text_from_selection(mode)
   if mode:lower() ~= "v" and mode ~= CTRL_V then return nil end
 
   local start_row, start_col, end_row, end_col = unpack(get_range_from_selection())
-  local text = api.nvim_buf_get_text(buf, start_row, start_col, end_row, end_col, {})
+  local text = api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
 
   if mode:lower() == "v" then return text end
   return vim.tbl_map(function(l) return l:sub(start_col + 1, end_col) end, text)
