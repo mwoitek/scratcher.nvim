@@ -4,7 +4,7 @@ local M = {}
 
 ---@param x any
 ---@return boolean
-function M.is_dict(x) return type(x) == "table" and (vim.tbl_isempty(x) or not vim.tbl_islist(x)) end
+function M.is_dict(x) return type(x) == "table" and (vim.tbl_isempty(x) or not vim.islist(x)) end
 
 ---@param x any
 ---@return boolean
