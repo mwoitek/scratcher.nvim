@@ -1,17 +1,18 @@
 local valid = require "scratcher.validation"
 
+---@alias scratcher.Position "bottom"|"left"|"right"|"top"|"float"
+---@alias scratcher.SizeOpts { width: number, height: number }
+
 ---@alias auto_hide { enable: boolean, timeout: number }
 
 ---@class Options
----@field position string
----@field width number
----@field height number
+---@field position scratcher.Position
+---@field size scratcher.SizeOpts
 ---@field start_in_insert boolean
 ---@field auto_hide auto_hide
 local Options = {
-  position = "top",
-  width = 0.35,
-  height = 0.2,
+  position = "bottom",
+  size = { width = 0.5, height = 0.33 },
   start_in_insert = false,
   auto_hide = {
     enable = false,
