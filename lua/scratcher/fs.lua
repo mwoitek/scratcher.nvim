@@ -41,4 +41,50 @@ function M.create_directory(path, interactive)
   return created
 end
 
+---@param dir_path string
+---@return string[]
+function M.get_file_list(dir_path)
+  vim.validate("dir_path", dir_path, valid.is_valid_directory, "path to an existing directory")
+  local abs_path = vim.fs.abspath(vim.fs.normalize(dir_path))
+
+  local files = {}
+
+  for name, type_ in vim.fs.dir(abs_path) do
+    if type_ == "file" then
+      local full_path = vim.fs.joinpath(abs_path, name)
+      table.insert(files, full_path)
+    end
+  end
+
+  return files
+end
+
+---@param path string
+---@param must_exist boolean?
+---@return integer
+function M.open_file(path, must_exist)
+  vim.validate("must_exist", must_exist, "boolean", true, "boolean or nil")
+
+  if must_exist then
+    vim.validate("path", path, valid.is_valid_file, "path to an existing file")
+  else
+    vim.validate("path", path, "string", "file path as a string")
+  end
+
+  local curr_win = vim.api.nvim_get_current_win()
+  local curr_buf = vim.api.nvim_get_current_buf()
+
+  local bufhidden = vim.bo[curr_buf].bufhidden
+  vim.bo[curr_buf].bufhidden = "hide"
+
+  local abs_path = vim.fs.abspath(vim.fs.normalize(path))
+  vim.cmd.edit(abs_path)
+  local new_buf = vim.api.nvim_get_current_buf()
+
+  vim.api.nvim_win_set_buf(curr_win, curr_buf)
+  vim.bo[curr_buf].bufhidden = bufhidden
+
+  return new_buf
+end
+
 return M
