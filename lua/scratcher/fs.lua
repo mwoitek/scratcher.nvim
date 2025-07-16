@@ -5,7 +5,7 @@ local valid = require "scratcher.validation"
 ---@param path string
 ---@param interactive boolean?
 ---@return boolean
-function M.create_directory(path, interactive)
+function M.mkdir(path, interactive)
   vim.validate("path", path, "string", "directory path as a string")
   vim.validate("interactive", interactive, "boolean", true, "boolean or nil")
 
@@ -43,7 +43,7 @@ end
 
 ---@param dir_path string
 ---@return string[]
-function M.get_file_list(dir_path)
+function M.get_files(dir_path)
   vim.validate("dir_path", dir_path, valid.is_valid_directory, "path to an existing directory")
   local abs_path = vim.fs.abspath(vim.fs.normalize(dir_path))
 
@@ -62,7 +62,7 @@ end
 ---@param path string
 ---@param must_exist boolean?
 ---@return integer
-function M.open_file(path, must_exist)
+function M.edit_file(path, must_exist)
   vim.validate("must_exist", must_exist, "boolean", true, "boolean or nil")
 
   if must_exist then
@@ -74,16 +74,12 @@ function M.open_file(path, must_exist)
   local curr_win = vim.api.nvim_get_current_win()
   local curr_buf = vim.api.nvim_get_current_buf()
 
-  local bufhidden = vim.bo[curr_buf].bufhidden
-  vim.bo[curr_buf].bufhidden = "hide"
-
   local abs_path = vim.fs.abspath(vim.fs.normalize(path))
-  vim.cmd.edit(abs_path)
+  local cmd = string.format("hide edit %s", abs_path)
+  vim.cmd(cmd)
+
   local new_buf = vim.api.nvim_get_current_buf()
-
   vim.api.nvim_win_set_buf(curr_win, curr_buf)
-  vim.bo[curr_buf].bufhidden = bufhidden
-
   return new_buf
 end
 
