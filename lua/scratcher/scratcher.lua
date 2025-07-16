@@ -29,38 +29,6 @@ function Scratcher:create_win_autocmds()
       api.nvim_del_augroup_by_name "ScratcherWinAutocmds"
     end,
   })
-
-  if not self.opts.auto_hide.enable then return end
-
-  if not self.timer then self.timer = vim.loop.new_timer() end
-
-  api.nvim_create_autocmd("WinEnter", {
-    group = group_id,
-    callback = function()
-      if self.win == api.nvim_get_current_win() then
-        self.timer:stop()
-      elseif not self.timer:is_active() then
-        self.timer:start(
-          math.floor(self.opts.auto_hide.timeout * 60000),
-          0,
-          vim.schedule_wrap(function() api.nvim_win_close(self.win, true) end)
-        )
-      end
-    end,
-  })
-end
-
-function Scratcher:create_buf_autocmds()
-  if not self.buf then error "cannot create autocmds, uninitialized buffer" end
-
-  api.nvim_create_autocmd("BufWipeout", {
-    group = api.nvim_create_augroup("ScratcherBufAutocmds", {}),
-    buffer = self.buf,
-    callback = function()
-      self.buf = nil
-      api.nvim_del_augroup_by_name "ScratcherBufAutocmds"
-    end,
-  })
 end
 
 ---@param stay boolean?
@@ -96,28 +64,6 @@ function Scratcher:create_buf()
   api.nvim_buf_set_name(self.buf, "[scratcher]")
 end
 
-function Scratcher:clear()
-  if not self.buf then error "failed to clear buffer, uninitialized buffer" end
-  if not api.nvim_buf_is_loaded(self.buf) then
-    error "failed to clear buffer, cannot operate on buffer lines"
-  end
-  api.nvim_buf_set_lines(self.buf, 0, -1, true, {})
-end
-
-function Scratcher:start_in_insert()
-  if not self.opts.start_in_insert then return end
-
-  if require("scratcher.utils").is_buf_empty(self.buf) then
-    self:clear()
-  else
-    api.nvim_buf_set_lines(self.buf, -1, -1, true, { "" })
-    local pos = { api.nvim_buf_line_count(self.buf), 0 }
-    api.nvim_win_set_cursor(self.win, pos)
-  end
-
-  vim.cmd.startinsert()
-end
-
 ---@param stay boolean?
 function Scratcher:open(stay)
   vim.validate { stay = { stay, "boolean", true } }
@@ -135,39 +81,6 @@ function Scratcher:toggle()
   else
     self:open()
   end
-end
-
----@param count number
----@param delete boolean?
-function Scratcher:paste(count, delete)
-  if self.buf == api.nvim_get_current_buf() then return end
-
-  local p = require "scratcher.paste"
-
-  local mode = api.nvim_get_mode().mode
-  if not p.is_mode_allowed(mode) then return end
-
-  if mode ~= "n" then
-    local text = p.get_text_from_selection(mode, delete)
-    self:open(true)
-    p.paste(self.buf, text, count)
-    return
-  end
-
-  local old_opfunc = vim.go.operatorfunc
-
-  ---@param motion_type string
-  _G.opfunc_paste = function(motion_type)
-    local text = p.get_text_from_motion(motion_type, delete)
-    self:open(true)
-    p.paste(self.buf, text, count)
-
-    vim.go.operatorfunc = old_opfunc
-    _G.opfunc_paste = nil
-  end
-
-  vim.go.operatorfunc = "v:lua.opfunc_paste"
-  api.nvim_feedkeys("g@", "nt", false)
 end
 
 return Scratcher
