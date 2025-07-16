@@ -57,4 +57,32 @@ function M.get_window_geometry(position, size)
   return config
 end
 
+---@param position scratcher.Position
+---@param size scratcher.Size
+---@param config vim.api.keyset.win_config?
+---@param enter boolean?
+---@return integer
+function M.open_win(position, size, config, enter)
+  -- NOTE: position and size will be validated by the function that uses their values
+  vim.validate("config", config, "table", true, "window config table or nil")
+  vim.validate("enter", enter, "boolean", true, "boolean or nil")
+
+  local win_geometry = M.get_window_geometry(position, size)
+  config = vim.tbl_deep_extend("force", config or {}, win_geometry)
+
+  -- by default, change focus to new window
+  if enter == nil then enter = true end
+
+  -- new window will display current buffer
+  local win = vim.api.nvim_open_win(0, enter, config)
+
+  if position == "left" or position == "right" then
+    vim.wo[win].winfixwidth = true
+  elseif position == "above" or position == "below" then
+    vim.wo[win].winfixheight = true
+  end
+
+  return win
+end
+
 return M
