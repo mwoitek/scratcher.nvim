@@ -15,47 +15,6 @@ function Scratcher:new(raw_opts)
   return scratcher
 end
 
-function Scratcher:create_win_autocmds()
-  if not self.win then error "cannot create autocmds, uninitialized window" end
-
-  local group_id = api.nvim_create_augroup("ScratcherWinAutocmds", {})
-
-  api.nvim_create_autocmd("WinClosed", {
-    group = group_id,
-    pattern = tostring(self.win),
-    callback = function()
-      self.win = nil
-      if self.timer then self.timer:stop() end
-      api.nvim_del_augroup_by_name "ScratcherWinAutocmds"
-    end,
-  })
-end
-
----@param stay boolean?
-function Scratcher:create_win(stay)
-  if self.win then
-    if not stay then api.nvim_set_current_win(self.win) end
-    return
-  end
-
-  if stay then
-    local win = api.nvim_get_current_win()
-
-    vim.cmd(self.opts:split_cmd())
-    self.win = api.nvim_get_current_win()
-
-    api.nvim_set_current_win(win)
-  else
-    vim.cmd(self.opts:split_cmd())
-    self.win = api.nvim_get_current_win()
-  end
-
-  self:create_win_autocmds()
-
-  vim.wo[self.win].winfixwidth = true
-  vim.wo[self.win].winfixheight = true
-end
-
 function Scratcher:create_buf()
   if self.buf then return end
 
