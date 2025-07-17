@@ -3,12 +3,6 @@ local M = {}
 local valid = require "scratcher.validation"
 
 ---@param buf integer?
-function M.clear(buf)
-  vim.validate("buf", buf, valid.is_valid_buffer, true, "valid buffer ID")
-  vim.api.nvim_buf_set_lines(buf or 0, 0, -1, true, {})
-end
-
----@param buf integer?
 function M.create_save_autocmds(buf)
   vim.validate("buf", buf, valid.is_valid_buffer, true, "valid buffer ID")
   if buf == nil or buf == 0 then buf = vim.api.nvim_get_current_buf() end
@@ -33,11 +27,14 @@ function M.create_save_autocmds(buf)
 end
 
 ---@param buf integer?
----@return boolean
-function M.is_empty(buf)
+function M.configure_scratch_buffer(buf)
+  -- NOTE: This function is meant to be used with persistent scratch
+  -- buffers. Temporary buffers will be configured in the act of their creation.
   vim.validate("buf", buf, valid.is_valid_buffer, true, "valid buffer ID")
-  local lines = vim.api.nvim_buf_get_lines(buf or 0, 0, -1, true)
-  return vim.iter(lines):all(function(l) return vim.trim(l):len() == 0 end)
+  buf = buf or 0
+  vim.bo[buf].bufhidden = "hide"
+  vim.bo[buf].buflisted = false
+  M.create_save_autocmds(buf)
 end
 
 ---@param buf integer?
@@ -52,6 +49,20 @@ function M.change_to_insert(buf)
       vim.cmd "normal! C"
     end
   end)
+end
+
+---@param buf integer?
+function M.clear(buf)
+  vim.validate("buf", buf, valid.is_valid_buffer, true, "valid buffer ID")
+  vim.api.nvim_buf_set_lines(buf or 0, 0, -1, true, {})
+end
+
+---@param buf integer?
+---@return boolean
+function M.is_empty(buf)
+  vim.validate("buf", buf, valid.is_valid_buffer, true, "valid buffer ID")
+  local lines = vim.api.nvim_buf_get_lines(buf or 0, 0, -1, true)
+  return vim.iter(lines):all(function(l) return vim.trim(l):len() == 0 end)
 end
 
 return M
