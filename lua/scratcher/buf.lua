@@ -1,5 +1,6 @@
 local M = {}
 
+local fs = require "scratcher.fs"
 local valid = require "scratcher.validation"
 
 ---@param buf integer?
@@ -49,6 +50,29 @@ function M.change_to_insert(buf)
       vim.cmd "normal! C"
     end
   end)
+end
+
+---@param file_path string?
+---@param start_in_insert boolean?
+---@return integer
+function M.create_scratch_buffer(file_path, start_in_insert)
+  vim.validate("file_path", file_path, "string", true, "string or nil")
+  vim.validate("start_in_insert", start_in_insert, "boolean", true, "boolean or nil")
+
+  local buf
+
+  -- Create temporary buffer when file path is not specified
+  if not file_path then
+    buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_name(buf, "[scratcher]")
+  else
+    buf = fs.edit_file(file_path)
+    M.configure_scratch_buffer(buf)
+  end
+
+  if start_in_insert then M.change_to_insert(buf) end
+
+  return buf
 end
 
 ---@param buf integer?

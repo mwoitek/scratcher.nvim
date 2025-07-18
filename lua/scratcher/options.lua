@@ -5,8 +5,6 @@
 ---@field position scratcher.Position
 ---@field size scratcher.Size
 ---@field start_in_insert boolean
-
----@type scratcher.Opts
 local Opts = {
   position = "below",
   size = { width = 0.5, height = 0.33 },
