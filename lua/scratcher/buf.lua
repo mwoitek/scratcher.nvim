@@ -44,20 +44,16 @@ function M.change_to_insert(buf)
   vim.api.nvim_buf_call(buf or 0, function()
     vim.cmd "normal! 0G"
     local line = vim.api.nvim_get_current_line()
-    if vim.trim(line):len() > 0 then
-      vim.cmd "normal! o"
-    else
-      vim.cmd "normal! C"
-    end
+    local key = vim.trim(line):len() > 0 and "o" or "C"
+    local cmd = string.format("normal! %s", key)
+    vim.cmd(cmd)
   end)
 end
 
 ---@param file_path string?
----@param start_in_insert boolean?
 ---@return integer
-function M.create_scratch_buffer(file_path, start_in_insert)
+function M.create_scratch_buffer(file_path)
   vim.validate("file_path", file_path, "string", true, "string or nil")
-  vim.validate("start_in_insert", start_in_insert, "boolean", true, "boolean or nil")
 
   local buf
 
@@ -69,8 +65,6 @@ function M.create_scratch_buffer(file_path, start_in_insert)
     buf = fs.edit_file(file_path)
     M.configure_scratch_buffer(buf)
   end
-
-  if start_in_insert then M.change_to_insert(buf) end
 
   return buf
 end
