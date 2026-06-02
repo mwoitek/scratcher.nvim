@@ -1,24 +1,27 @@
 local Config = {
   autosave = true,
+  storage_path = vim.fs.joinpath(vim.fn.stdpath "data", "scratcher"),
   window_strategy = "split",
 }
 Config.__index = Config
 
 function Config:new(o)
   o = o or {}
-  setmetatable(o, self)
-  return o
+  return setmetatable(o, self)
 end
 
+local VARIABLE_PREFIX = "scratcher_"
+
 function Config:get(name)
-  local value = vim.g["scratcher_" .. name]
+  local value = vim.g[VARIABLE_PREFIX .. name]
   if value ~= nil then return value end
   return self[name]
 end
 
 function Config:setup(opts)
+  opts = opts or {}
   for k, v in pairs(opts) do
-    vim.g["scratcher_" .. k] = v
+    vim.g[VARIABLE_PREFIX .. k] = v
   end
 end
 
