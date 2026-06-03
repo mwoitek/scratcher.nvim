@@ -1,6 +1,6 @@
 local Config = {
   autosave = true,
-  storage_path = vim.fs.joinpath(vim.fn.stdpath("data"), "scratcher"),
+  storage_dir = vim.fs.joinpath(vim.fn.stdpath("data"), "scratcher"),
   window_strategy = "split",
 }
 Config.__index = Config
