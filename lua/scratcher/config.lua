@@ -1,6 +1,6 @@
 local Config = {
   autosave = true,
-  storage_path = vim.fs.joinpath(vim.fn.stdpath "data", "scratcher"),
+  storage_path = vim.fs.joinpath(vim.fn.stdpath("data"), "scratcher"),
   window_strategy = "split",
 }
 Config.__index = Config
@@ -18,7 +18,7 @@ function Config:get(name)
   return self[name]
 end
 
-function Config:setup(opts)
+function Config.setup(opts)
   opts = opts or {}
   for k, v in pairs(opts) do
     vim.g[VARIABLE_PREFIX .. k] = v
