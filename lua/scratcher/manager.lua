@@ -22,9 +22,7 @@ end
 
 function Manager:storage_create()
   if self:storage_exists() then return end
-  local mode = tonumber("755", 8)
-  local created = uv.fs_mkdir(self.storage_dir, mode)
-  if type(created) ~= "boolean" or not created then
+  if fn.mkdir(self.storage_dir, "p") == 0 then
     local err = string.format("Failed to create directory: %s", self.storage_dir)
     error(err)
   end
@@ -42,16 +40,12 @@ function Manager:file_name(name, ext)
   return ext:len() == 0 and name or string.format("%s.%s", name, ext)
 end
 
-function Manager:path(name, ext)
-  return fs.joinpath(self:storage(), self:file_name(name, ext))
-end
-
 function Manager:document(name, ext)
   local file_name = self:file_name(name, ext)
   local doc = self.documents[file_name]
   if doc ~= nil then return doc end
   name = fn.fnamemodify(file_name, ":r")
-  local path = self:path(name, ext)
+  local path = fs.joinpath(self:storage(), file_name)
   self.documents[file_name] = Document:new(name, path)
   return self.documents[file_name]
 end

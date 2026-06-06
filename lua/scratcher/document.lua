@@ -36,28 +36,21 @@ function Document:create()
 
   local bytes_written = uv.fs_write(file, "")
   if type(bytes_written) ~= "number" then
+    uv.fs_close(file)
     local err = string.format("Failed to write to file: %s", self.path)
     error(err)
   end
 
-  local closed = uv.fs_close(file)
-  if type(closed) ~= "boolean" or not closed then
-    local err = string.format("Failed to close file: %s", self.path)
-    error(err)
-  end
+  uv.fs_close(file)
 end
 
 function Document:load()
   if self:is_loaded() then return end
-
-  local ok, err = pcall(self.create, self)
-  if not ok then error(err) end
-
+  self:create()
   self.buf = fn.bufadd(self.path)
   fn.bufload(self.buf)
-
   vim.bo[self.buf].bufhidden = "hide"
-  vim.bo[self.buf].buflisted = false
+  -- vim.bo[self.buf].buflisted = false
 end
 
 function Document:unload()
