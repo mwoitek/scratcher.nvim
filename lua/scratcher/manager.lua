@@ -62,4 +62,4 @@ function Manager:save(name, ext)
   self:document(name, ext):save()
 end
 
-return Manager:new()
+return Manager
