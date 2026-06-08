@@ -30,4 +30,4 @@ function Config:setup(opts)
   end
 end
 
-return Config:new()
+return Config
