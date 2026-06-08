@@ -29,8 +29,8 @@ function Manager:storage_create()
 end
 
 function Manager:extension()
-  if self.extension == nil then self.extension = self.config:get("extension") end
-  return self.extension
+  if self._extension == nil then self._extension = self.config:get("extension") end
+  return self._extension
 end
 
 function Manager:file_name(name, extension)
