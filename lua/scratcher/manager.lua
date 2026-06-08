@@ -61,6 +61,13 @@ function Manager:close(name, extension)
   self:document(name, extension):unload()
 end
 
+function Manager:delete(name, extension, strict)
+  local doc = self:document(name, extension)
+  local file_name = fn.fnamemodify(doc.path, ":t")
+  doc:delete(strict)
+  self.documents[file_name] = nil
+end
+
 function Manager:save(name, extension)
   self:document(name, extension):save()
 end

@@ -3,6 +3,7 @@ Document.__index = Document
 
 local api = vim.api
 local fn = vim.fn
+local fs = vim.fs
 local uv = vim.uv
 
 function Document:new(name, path)
@@ -56,6 +57,16 @@ end
 function Document:unload()
   api.nvim_buf_delete(self:buffer(), { unload = true })
   self.buf = nil
+end
+
+function Document:delete(strict)
+  if not self:exists() then
+    if not strict then return end
+    local err = string.format("Cannot delete non-existing file: %s", self.path)
+    error(err)
+  end
+  if self:is_loaded() then self:unload() end
+  fs.rm(self.path)
 end
 
 function Document:clear()
